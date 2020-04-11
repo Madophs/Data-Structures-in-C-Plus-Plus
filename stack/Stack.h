@@ -1,7 +1,6 @@
 #ifndef STACK_H
 #define STACK_H
 
-#include <iostream>
 #include <stdexcept>
 
 template <class C>
@@ -17,10 +16,10 @@ struct Node {
 };
 
 template <class C>
-
 class Stack {
 	public:
 		Stack();
+		~Stack();
 		bool isEmpty() const { return !itemCount; }
 		int size() const { return itemCount; }
 		void push(C);
@@ -30,6 +29,17 @@ class Stack {
 		Node<C> *tail;
 		unsigned int itemCount;
 };
+
+template <class C>
+Stack<C>::~Stack(){
+	if(tail == nullptr) return;
+	while(tail->l_node != nullptr){
+		tail = tail->l_node;
+		delete tail->r_node;
+	}
+	if(tail != nullptr)
+		delete tail;
+}
 
 template <class C>
 Stack<C>::Stack() {

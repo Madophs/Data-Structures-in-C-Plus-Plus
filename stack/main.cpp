@@ -4,13 +4,13 @@
 
 using namespace std;
 
-int main(){
+
+int main() {
 	Stack<int> s;
-	for(int i = 0; i <= 10; ++i){
+	for(int i = 0; i <= 10; ++i) {
 		s.push(i);
 	}
-	while(!s.isEmpty()){
-		cout << "Stack size: " << s.size() << endl;
+	while(!s.isEmpty()) {
 		cout << "Value at the top: " << s.top() << endl;
 		s.pop();
 	}
