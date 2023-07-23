@@ -149,7 +149,7 @@ class BST
                 itemsToDelete.pop();
                 delete item;
             }
-            ++m_size;
+            --m_size;
             return true;
         }
 
