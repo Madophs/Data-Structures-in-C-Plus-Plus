@@ -22,6 +22,8 @@ INCLUDE_DIRECTORIES(
     ${GTEST_INCLUDE_DIRS}/include
 )
 
+set(CMAKE_CXX_FLAGS "-g -fsanitize=address")
+
 #ADD_SUBDIRECTORY(stack)
 #ADD_SUBDIRECTORY(linked_list)
 ADD_SUBDIRECTORY(basic)

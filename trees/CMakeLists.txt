@@ -1,1 +1,2 @@
-ADD_SUBDIRECTORY(bst)
+add_subdirectory(bst)
+add_subdirectory(avl)
