@@ -6,6 +6,7 @@
 #include <ios>
 #include <iostream>
 #include <iterator>
+#include <stdexcept>
 #include <vector>
 #include <stack>
 
@@ -34,13 +35,31 @@ public:
         return m_size;
     }
 
+    bool exists(const T& value) {
+        if (m_root == nullptr) {
+            return false;
+        }
+        AVLNode *traversalNode = m_root;
+        while (traversalNode != nullptr) {
+            if (value == traversalNode->value) {
+                return true;
+            } else if (value < traversalNode->value) {
+                traversalNode = traversalNode->leftChild;
+            } else {
+                traversalNode = traversalNode->rightChild;
+            }
+        }
+        return false;
+    }
+
     void insert(const T& value) {
-        AVLNode* newNode = new AVLNode(value);
+        AVLNode *newNode = new AVLNode(value);
         if (m_root == nullptr) {
             m_root = newNode;
+            ++m_size;
         } else {
-            AVLNode* upfrontNode = m_root;
-            AVLNode* prevNode = m_root;
+            AVLNode *upfrontNode = m_root;
+            AVLNode *prevNode = m_root;
             while (upfrontNode != nullptr) {
                 prevNode = upfrontNode;
                 if (newNode->value < upfrontNode->value) {
@@ -67,34 +86,210 @@ public:
                 return;
             }
 
-            AVLNode* traversalNode = newNode;
-            while (traversalNode != nullptr && traversalNode->parent != nullptr) {
-                AVLNode* parentNode = traversalNode->parent;
-                parentNode->level = std::max(
-                        parentNode->getLeftChildLevel() + 1,
-                        parentNode->getRightChildLevel() + 1);
-                int currentNodeDiff = traversalNode->getLeftChildLevel() - traversalNode->getRightChildLevel();
-                int parentDiff = parentNode->getLeftChildLevel() - parentNode->getRightChildLevel();
-                if (parentDiff == -2) {
-                    if (currentNodeDiff == 1) {
-                        rightRotation(traversalNode->leftChild);
-                    } else {
-                        leftRotation(traversalNode);
-                    }
-                } else if (parentDiff == 2) {
-                    if (currentNodeDiff == -1) {
-                        leftRotation(traversalNode->rightChild);
-                    } else {
-                        rightRotation(traversalNode);
-                    }
-                }
-                traversalNode = traversalNode->parent;
-            }
+            doRotate(newNode);
         }
     }
 
-    void leftRotation(AVLNode* pivot) {
-        AVLNode* parentNode = pivot->parent;
+    void remove(const T& value) {
+        std::cout << "Removing " << value << std::endl;
+        if (m_root == nullptr) {
+            throw std::runtime_error("AVL is empty.");
+        }
+
+        AVLNode *targetNode = m_root;
+        while (targetNode != nullptr) {
+            if (value == targetNode->value) {
+                break;
+            } else if (value < targetNode->value) {
+                targetNode = targetNode->leftChild;
+            } else {
+                targetNode = targetNode->rightChild;
+            }
+        }
+
+        if (targetNode == nullptr) {
+            throw std::runtime_error("remove: element doesn't exists.");
+        }
+
+        if (targetNode->leftChild == nullptr && targetNode->rightChild == nullptr) {
+            AVLNode *parentNode = targetNode->parent;
+            if (parentNode != nullptr) {
+                if (targetNode->value < parentNode->value) {
+                    parentNode->leftChild = nullptr;
+                } else {
+                    parentNode->rightChild = nullptr;
+                }
+            } else {
+                m_root = nullptr;
+            }
+
+            doRotate(parentNode);
+
+            delete targetNode;
+            --m_size;
+            return;
+        }
+
+        if (targetNode->rightChild != nullptr) {
+            AVLNode *successor = targetNode->rightChild;
+            while (successor->leftChild != nullptr) {
+                successor = successor->leftChild;
+            }
+
+            if (successor->parent->value != targetNode->value) {
+                AVLNode *parent = successor->parent;
+                parent->leftChild = successor->rightChild;
+                if (parent->leftChild != nullptr) {
+                    parent->leftChild->parent = parent;
+                }
+
+                successor->rightChild = targetNode->rightChild;
+                successor->rightChild->parent = successor;
+            }
+
+            successor->leftChild = targetNode->leftChild;
+            if (successor->leftChild != nullptr) {
+                successor->leftChild->parent = successor;
+            }
+
+            successor->parent = targetNode->parent;
+            if (successor->parent != nullptr) {
+                if (successor->value < successor->parent->value) {
+                    successor->parent->leftChild = successor;
+                } else {
+                    successor->parent->rightChild = successor;
+                }
+            } else {
+                m_root = successor;
+            }
+
+            if (successor->rightChild != nullptr) {
+                doRotate(successor->rightChild);
+            } else if (successor->leftChild != nullptr) {
+                doRotate(successor->leftChild);
+            } else {
+                doRotate(successor);
+            }
+
+            delete targetNode;
+            --m_size;
+            return;
+        }
+
+        if (targetNode->leftChild != nullptr) {
+            AVLNode *leftChild = targetNode->leftChild;
+
+            leftChild->rightChild = targetNode->rightChild;
+            if (leftChild->rightChild != nullptr) {
+                leftChild->rightChild->parent = leftChild;
+            }
+            leftChild->parent = targetNode->parent;
+            if (leftChild->parent != nullptr) {
+                if (leftChild->value < leftChild->parent->value) {
+                    leftChild->parent->leftChild = leftChild;
+                } else {
+                    leftChild->parent->rightChild = leftChild;
+                }
+            } else {
+                m_root = leftChild;
+            }
+
+            doRotate(leftChild);
+
+            delete targetNode;
+            --m_size;
+        }
+    }
+
+    std::vector<T> getPreOrder() {
+        std::vector<T> result;
+        result.reserve(m_size);
+        doGetPreOrder(m_root, result);
+        return result;
+    }
+
+    std::vector<T> getInOrder() {
+        std::vector<T> result;
+        result.reserve(m_size);
+        doGetInOrder(m_root, result);
+        return result;
+    }
+
+    std::vector<T> getPostOrder() {
+        std::vector<T> result;
+        result.reserve(m_size);
+        doGetPostOrder(m_root, result);
+        return result;
+    }
+
+    void traverseNodes() {
+        AVLNode *node = m_root;
+        do {
+            std::cout << std::endl;
+            std::cout << "Node " << node->value << std::endl;
+            std::cout << "Height: " << node->level << std::endl;
+            if (node->parent == nullptr)
+                std::cout << "Parent: " << nullptr;
+            else
+                std::cout << "Parent: " << node->parent->value;
+            if (node->leftChild == nullptr)
+                std::cout << "\nLeft child: " << nullptr;
+            else
+                std::cout << "\nLeft child: " << node->leftChild->value;
+
+            if (node->rightChild == nullptr)
+                std::cout << "\nRight child: " << nullptr;
+            else
+                std::cout << "\nRight child: " << node->rightChild->value;
+            std::cout << std::endl;
+            std::string c;
+            std::cin >> c;
+            if (c == "l")
+                node = node->leftChild;
+            else if (c == "r")
+                node = node->rightChild;
+            else if (c == "u")
+                node = node->parent;
+            else
+                break;
+        } while (true);
+    }
+protected:
+    void doRotate(AVLNode *traversalNode) {
+        if (traversalNode == nullptr) {
+            return;
+        }
+
+        traversalNode->level = std::max(
+                traversalNode->getLeftChildLevel() + 1,
+                traversalNode->getRightChildLevel() + 1);
+
+        while (traversalNode != nullptr && traversalNode->parent != nullptr) {
+            AVLNode *parentNode = traversalNode->parent;
+            parentNode->level = std::max(
+                    parentNode->getLeftChildLevel() + 1,
+                    parentNode->getRightChildLevel() + 1);
+            int currentNodeDiff = traversalNode->getLeftChildLevel() - traversalNode->getRightChildLevel();
+            int parentDiff = parentNode->getLeftChildLevel() - parentNode->getRightChildLevel();
+            if (parentDiff == -2) {
+                if (currentNodeDiff == 1) {
+                    doRightRotation(traversalNode->leftChild);
+                } else {
+                    doLeftRotation(traversalNode);
+                }
+            } else if (parentDiff == 2) {
+                if (currentNodeDiff == -1) {
+                    doLeftRotation(traversalNode->rightChild);
+                } else {
+                    doRightRotation(traversalNode);
+                }
+            }
+            traversalNode = traversalNode->parent;
+        }
+    }
+
+    void doLeftRotation(AVLNode *pivot) {
+        AVLNode *parentNode = pivot->parent;
         pivot->parent = parentNode->parent;
         if (pivot->parent != nullptr) {
             if (pivot->value < pivot->parent->value) {
@@ -120,10 +315,15 @@ public:
         pivot->level = std::max(
                 pivot->getLeftChildLevel() + 1,
                 pivot->getRightChildLevel() + 1);
+        if (pivot->parent != nullptr) {
+            pivot->parent->level = std::max(
+                    pivot->parent->getLeftChildLevel() + 1,
+                    pivot->parent->getRightChildLevel() + 1);
+        }
     }
 
-    void rightRotation(AVLNode* pivot) {
-        AVLNode* parentNode = pivot->parent;
+    void doRightRotation(AVLNode *pivot) {
+        AVLNode *parentNode = pivot->parent;
         pivot->parent = parentNode->parent;
 
         if (pivot->parent != nullptr) {
@@ -150,23 +350,14 @@ public:
         pivot->level = std::max(
                 pivot->getLeftChildLevel() + 1,
                 pivot->getRightChildLevel() + 1);
+        if (pivot->parent != nullptr) {
+            pivot->parent->level = std::max(
+                    pivot->parent->getLeftChildLevel() + 1,
+                    pivot->parent->getRightChildLevel() + 1);
+        }
     }
 
-    std::vector<T> getInOrder() {
-        std::vector<T> result;
-        result.reserve(m_size);
-        doGetInOrder(m_root, result);
-        return result;
-    }
-
-    std::vector<T> getPreOrder() {
-        std::vector<T> result;
-        result.reserve(m_size);
-        doGetPreOrder(m_root, result);
-        return result;
-    }
-protected:
-    void doGetPreOrder(AVLNode* node, std::vector<T>& result) {
+    void doGetPreOrder(AVLNode *node, std::vector<T>& result) {
         if (node == nullptr) {
             return;
         }
@@ -175,7 +366,7 @@ protected:
         doGetPreOrder(node->rightChild, result);
     }
 
-    void doGetInOrder(AVLNode* node, std::vector<T>& result) {
+    void doGetInOrder(AVLNode *node, std::vector<T>& result) {
         if (node == nullptr) {
             return;
         }
@@ -184,15 +375,24 @@ protected:
         doGetInOrder(node->rightChild, result);
     }
 
+    void doGetPostOrder(AVLNode *node, std::vector<T>& result) {
+        if (node == nullptr) {
+            return;
+        }
+        doGetPostOrder(node->leftChild, result);
+        doGetPostOrder(node->rightChild, result);
+        result.push_back(node->value);
+    }
+
 private:
     std::size_t m_size;
-    AVLNode* m_root;
+    AVLNode *m_root;
 
     struct AVLNode
     {
-        AVLNode* parent;
-        AVLNode* leftChild;
-        AVLNode* rightChild;
+        AVLNode *parent;
+        AVLNode *leftChild;
+        AVLNode *rightChild;
         std::size_t level;
         std::size_t count;
         T value;
@@ -226,7 +426,7 @@ private:
             std::stack<AVLNode*> nodes;
             nodes.push(m_root);
             while (!nodes.empty()) {
-                AVLNode* node = nodes.top();
+                AVLNode *node = nodes.top();
                 nodes.pop();
                 if (node->leftChild != nullptr) {
                     nodes.push(node->leftChild);
@@ -244,37 +444,6 @@ private:
         }
     }
 
-    void traverseNodes() {
-        AVLNode* node = m_root;
-        do {
-            std::cout << std::endl;
-            std::cout << "Node " << node->value << " ";
-            if (node->parent == nullptr)
-                std::cout << "\nParent: " << nullptr;
-            else
-                std::cout << "\nParent: " << node->parent->value;
-            if (node->leftChild == nullptr)
-                std::cout << "\nLeft child: " << nullptr;
-            else
-                std::cout << "\nLeft child: " << node->leftChild->value;
-
-            if (node->rightChild == nullptr)
-                std::cout << "\nRight child: " << nullptr;
-            else
-                std::cout << "\nRight child: " << node->rightChild->value;
-            std::cout << std::endl;
-            std::string c;
-            std::cin >> c;
-            if (c == "l")
-                node = node->leftChild;
-            else if (c == "r")
-                node = node->rightChild;
-            else if (c == "u")
-                node = node->parent;
-            else
-                break;
-        } while (true);
-    }
 };
 
 #endif
