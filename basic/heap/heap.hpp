@@ -1,4 +1,6 @@
-#pragma once
+#ifndef  __HEAP_H__
+#define __HEAP_H__
+
 #include <cstdint>
 #include <iostream>
 #include <deque>
@@ -15,10 +17,10 @@ class Heap
         Heap(Comparator cmp);
 
         template <class InputIterator>
-        Heap(InputIterator i_begin, InputIterator i_end);
+        Heap(InputIterator begin, InputIterator end);
 
         template <class InputIterator, class Comparator>
-        Heap(InputIterator i_begin, InputIterator i_end, Comparator cmp);
+        Heap(InputIterator begin, InputIterator end, Comparator cmp);
 
         typename deque<T>::iterator begin() noexcept;
 
@@ -27,13 +29,13 @@ class Heap
         template <class SimpleIterator>
         SimpleIterator end();
 
-        void insert(const T& i_item);
+        void insert(const T& item);
 
         T pop();
 
         T top() const;
 
-        T operator[](uint32_t i_index) const { return m_container[i_index]; }
+        T operator[](uint32_t index) const { return m_container[index]; }
 
         inline uint32_t size() const;
 
@@ -41,15 +43,15 @@ class Heap
 
         void clear();
     protected:
-        void doBubbleUp(uint32_t i_index);
+        void doBubbleUp(uint32_t index);
 
-        void doBubbleDown(uint32_t i_index);
+        void doBubbleDown(uint32_t index);
 
-        inline uint32_t doGetParent(const uint32_t& i_index);
+        inline uint32_t doGetParent(const uint32_t& index);
 
-        inline uint32_t doGetLeftChild(const uint32_t& i_index);
+        inline uint32_t doGetLeftChild(const uint32_t& index);
 
-        inline uint32_t doGetRightChild(const uint32_t& i_index);
+        inline uint32_t doGetRightChild(const uint32_t& index);
 
         inline static bool doDefaultCmp(const T& a, const T& b);
     private:
@@ -75,21 +77,21 @@ Heap<T>::Heap(Comparator cmp)
 
 template <class T>
 template <class InputIterator>
-Heap<T>::Heap(InputIterator i_begin, InputIterator i_end)
+Heap<T>::Heap(InputIterator begin, InputIterator end)
 {
     m_cmp = &doDefaultCmp;
-    for (;i_begin != i_end; ++i_begin) {
-        insert(*i_begin);
+    for (;begin != end; ++begin) {
+        insert(*begin);
     }
 }
 
 template <class T>
 template <class InputIterator, class Comparator>
-Heap<T>::Heap(InputIterator i_begin, InputIterator i_end, Comparator cmp)
+Heap<T>::Heap(InputIterator begin, InputIterator end, Comparator cmp)
 {
     m_cmp = cmp;
-    for (;i_begin != i_end; ++i_begin) {
-        insert(*i_begin);
+    for (;begin != end; ++begin) {
+        insert(*begin);
     }
 }
 
@@ -106,9 +108,9 @@ typename deque<T>::iterator Heap<T>::end() noexcept
 }
 
 template <class T>
-void Heap<T>::insert(const T& i_item)
+void Heap<T>::insert(const T& item)
 {
-    m_container.push_back(i_item);
+    m_container.push_back(item);
     doBubbleUp(m_container.size()-1);
 }
 
@@ -149,20 +151,20 @@ void Heap<T>::clear()
 // Protected Methods
 
 template <class T>
-void Heap<T>::doBubbleUp(uint32_t i_index)
+void Heap<T>::doBubbleUp(uint32_t index)
 {
-    uint32_t parentIndex = doGetParent(i_index);
-    while (m_cmp(m_container[i_index], m_container[parentIndex])) {
-        swap(m_container[i_index], m_container[parentIndex]);
-        i_index = parentIndex;
-        parentIndex = doGetParent(i_index);
+    uint32_t parentIndex = doGetParent(index);
+    while (m_cmp(m_container[index], m_container[parentIndex])) {
+        swap(m_container[index], m_container[parentIndex]);
+        index = parentIndex;
+        parentIndex = doGetParent(index);
     }
 }
 
 template <class T>
-void Heap<T>::doBubbleDown(uint32_t i_index)
+void Heap<T>::doBubbleDown(uint32_t index)
 {
-    uint32_t parent = i_index;
+    uint32_t parent = index;
     uint32_t leftChild = doGetLeftChild(parent);
     uint32_t rightChild = doGetRightChild(parent);
     bool onLeft = leftChild < m_container.size() ? m_cmp(m_container[leftChild], m_container[parent]) : false;
@@ -199,20 +201,22 @@ bool Heap<T>::doDefaultCmp(const T&a, const T&b)
 }
 
 template <class T>
-uint32_t Heap<T>::doGetParent(const uint32_t& i_index)
+uint32_t Heap<T>::doGetParent(const uint32_t& index)
 {
-    if (i_index == 0) return 0;
-    return (i_index - 1) >> 1;
+    if (index == 0) return 0;
+    return (index - 1) >> 1;
 }
 
 template <class T>
-uint32_t Heap<T>::doGetLeftChild(const uint32_t& i_index)
+uint32_t Heap<T>::doGetLeftChild(const uint32_t& index)
 {
-    return (i_index << 1) + 1;
+    return (index << 1) + 1;
 }
 
 template <class T>
-uint32_t Heap<T>::doGetRightChild(const uint32_t& i_index)
+uint32_t Heap<T>::doGetRightChild(const uint32_t& index)
 {
-    return (i_index << 1) + 2;
+    return (index << 1) + 2;
 }
+
+#endif

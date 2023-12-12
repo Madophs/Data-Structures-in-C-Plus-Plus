@@ -1,69 +1,77 @@
 #include "avl.hpp"
 #include <random>
 #include <ctime>
+#include <set>
+#include <unordered_set>
 
 using namespace std;
 
-inline void printVec(const vector<int>& vec) {
+inline string vec2str(const vector<int>& vec) {
+    string res = "";
     for (uint32_t i = 0; i < vec.size(); ++i) {
-        if (i) cout << " ";
-        cout << vec[i];
+        if (i) res += ", ";
+        res += to_string(vec[i]);
     }
-    cout << endl;
+    return res;
+}
+
+void randFill(vector<int>& vec, int randn) {
+    srand(time(nullptr));
+    vec.clear();
+    vec.reserve(randn);
+
+    set<int> uniq;
+    for (int i = 0; i < randn;) {
+        int randv = rand() % 100;
+        if (uniq.find(randv) == uniq.end()) {
+            uniq.insert(randv);
+            vec.push_back(randv);
+            ++i;
+        }
+    }
+    cout << vec2str(vec) << endl;
+}
+
+void add2avl(AVLTree<int>& avl, const vector<int> &vec, unordered_set<int> &uniq) {
+    for (auto val : vec) {
+        uniq.insert(val);
+        avl.insert(val);
+    }
 }
 
 int main() {
-    srand(time(nullptr));
-    AVLTree<int> avl;
-    //avl.insert(10);
-    //avl.insert(20);
-    //avl.insert(15);
-    //avl.traverseNodes();
-    AVLTree<int> tree2({11,32,95,89,66,73,90,40,99,72,28,61,29,82,68,7,33,6,57,47});
-    printVec(tree2.getPreOrder());
-    cout << tree2.size() << endl;
-    return 0;
-    std::string input("");
     vector<int> vec({11,32,95,89,66,73,90,40,99,72,28,61,29,82,68,7,33,6,57,47});
-    int arr[] = {1, 2, 3, 5};
-    std::cout << (sizeof(arr) / sizeof(int)) << std::endl;
-    vec.clear();
-    for (int i = 0; i < 50; ++i) {
-        int random = rand() % 300;
-        vec.push_back(random);
+    unordered_set<int> uniq;
+    randFill(vec, 15);
+    AVLTree<int> avl;
+    std::cout << vec2str(vec) << endl;
+    add2avl(avl, vec, uniq);
+
+    vector<int> original(vec.begin(), vec.end());
+    vector<int> removalOrder;
+    vector<vector<int>> allExpected;
+    for (auto val : uniq) {
+        removalOrder.push_back(val);
+        avl.remove(val);
+        cout << "preorder: " << vec2str(avl.getPreOrder()) << endl;
+        cout << "inorder: " << vec2str(avl.getInOrder()) << endl;
+        allExpected.push_back(avl.getPreOrder());
     }
 
-    for (int i = 0; i < vec.size(); ++i) {
-        input += std::to_string(vec[i]) + ",";
-        avl.insert(vec[i]);
+    for (auto i = 0u; i < allExpected.size(); ++i) {
+        if (!i) {
+            cout << "std::vector<std::vector<int>> preorderExpected(\n";
+            cout << "{\n";
+        }
+        cout << "{" << vec2str(allExpected[i]) << "}" << " // " << removalOrder[i] << "\n";
+        if (i + 1 == allExpected.size()) {
+            cout << "});\n";
+        }
     }
-    std::cout << input << std::endl;
-    //avl.insert(20);
-    //avl.insert(10);
-    //avl.insert(15);
-    //avl.insert(13);
-    //avl.insert(17);
-    //avl.insert(19);
-    //avl.traverseNodes();
-    //avl.insert(5);
-    //avl.insert(3);
-    //avl.insert(1);
-    //avl.insert(3);
-    //avl.insert(5);
-    //avl.insert(4);
-    //avl.insert(1);
-    //avl.insert(2);
-    //avl.insert(3);
-    //avl.insert(5);
-    //avl.insert(7);
-    //avl.insert(10);
-    //avl.insert(8);
-    //avl.traverseNodes();
-    cout << "PreOrder\n";
-    vector<int> preorder = avl.getPreOrder();
-    printVec(preorder);
-    cout << "InOrder\n";
-    vector<int> inorder = avl.getInOrder();
-    printVec(inorder);
+
+    cout << "Original " << vec2str(original) << endl;
+    cout << "Removal " << vec2str(removalOrder) << endl;
+    cout << "Unique elems: " << uniq.size() << endl;
+    cout << "AVL size: " << avl.size() << endl;
     return 0;
 }

@@ -1,2 +1,2 @@
-ADD_SUBDIRECTORY(basic)
-ADD_SUBDIRECTORY(trees)
+add_subdirectory(basic)
+add_subdirectory(trees)
