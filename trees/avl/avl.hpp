@@ -54,6 +54,26 @@ public:
         return doFind(value) != nullptr;
     }
 
+    T min() {
+        if (m_root == nullptr) {
+            std::runtime_error("AVl is empty");
+        }
+        AVLNode *leftmost = m_root;
+        while (leftmost->leftChild)
+            leftmost = leftmost->leftChild;
+        return leftmost->value;
+    }
+
+    T max() {
+        if (m_root == nullptr) {
+            std::runtime_error("AVl is empty");
+        }
+        AVLNode *rightmost = m_root;
+        while (rightmost->rightChild)
+            rightmost = rightmost->rightChild;
+        return rightmost->value;
+    }
+
     void insert(const T& value) {
         if (m_root == nullptr) {
             m_root = new AVLNode(value);
