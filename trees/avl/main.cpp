@@ -47,6 +47,12 @@ int main() {
     std::cout << vec2str(vec) << endl;
     add2avl(avl, vec, uniq);
 
+    auto rankItem = vec.front();
+    cout << "10nth elem: " << avl.nth(9) << endl;
+    cout << "Rank of " << rankItem << " is " << avl.rank(rankItem) << endl;
+    cout << "preorder: " << vec2str(avl.getPreOrder()) << endl;
+    cout << "inorder: " << vec2str(avl.getInOrder()) << endl;
+
     vector<int> original(vec.begin(), vec.end());
     vector<int> removalOrder;
     vector<vector<int>> allExpected;

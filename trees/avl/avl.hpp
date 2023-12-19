@@ -54,6 +54,23 @@ public:
         return doFind(value) != nullptr;
     }
 
+    T nth(std::size_t index) {
+        if (index > m_size) {
+            new std::runtime_error("Index out of bounds");
+        }
+        return this->getInOrder()[index];
+    }
+
+    int rank(const T &value) {
+        auto nodeList = this->getInOrder();
+        for (std::size_t i = 0; i < nodeList.size(); ++i) {
+            if (value == nodeList[i]) {
+                return i + 1;
+            }
+        }
+        return -1;
+    }
+
     T min() {
         if (m_root == nullptr) {
             std::runtime_error("AVl is empty");

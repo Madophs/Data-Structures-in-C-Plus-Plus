@@ -17,6 +17,8 @@ TEST(AVLTest, Test1)
     ASSERT_THAT(postorder, ElementsAre(6, 11, 7, 29, 28, 33, 47, 61, 57, 40, 32, 68, 72, 82, 73, 90, 99, 95, 89, 66));
     ASSERT_EQ(avl.size(), 20);
     ASSERT_EQ(preorder.size(), 20);
+    ASSERT_EQ(avl.nth(5), 32);
+    ASSERT_EQ(avl.rank(68), 13);
     ASSERT_TRUE(avl.exists(89));
     ASSERT_FALSE(avl.exists(91));
 }
